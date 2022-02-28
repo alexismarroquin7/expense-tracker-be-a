@@ -26,7 +26,7 @@ const expenses = [
     transaction_date_year: 2022,
     transaction_date_month: 1,
     transaction_date_day: 3,
-    user_id: 1,
+    user_id: 2,
     transaction_type_id: 2
   },
   { // 4

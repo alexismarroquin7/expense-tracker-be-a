@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const Transaction = require('./transactions-model');
+const { handleQuery } = require('./transactions-middleware');
 
-router.get('/', async (req, res, next) => {
+router.get('/', handleQuery, async (req, res, next) => {
   try {
     const transactions = await Transaction.findAll();
     res.status(200).json(transactions);
