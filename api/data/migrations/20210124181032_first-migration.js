@@ -21,6 +21,9 @@ exports.up = async (knex) => {
     users.string('email')
     .notNullable()
     .unique()
+    
+    users.integer('email_confirmed')
+    .notNullable()
 
     users.string('password', 200)
     .notNullable()
