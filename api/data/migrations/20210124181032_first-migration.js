@@ -52,35 +52,35 @@ exports.up = async (knex) => {
     tags.timestamp('tag_modified_at')
     .defaultTo(knex.fn.now())
   })
-  .createTable('expense_types', (expense_types) => {
-    expense_types.increments('expense_type_id')
+  .createTable('transaction_types', (transaction_types) => {
+    transaction_types.increments('transaction_type_id')
     
-    expense_types.string('expense_type_name')
+    transaction_types.string('transaction_type_name')
     .notNullable()
     .unique()
 
-    expense_types.timestamp('expense_type_created_at')
+    transaction_types.timestamp('transaction_type_created_at')
     .defaultTo(knex.fn.now())
     
-    expense_types.timestamp('expense_type_modified_at')
+    transaction_types.timestamp('transaction_type_modified_at')
     .defaultTo(knex.fn.now())
   })
-  .createTable('expenses', (expenses) => {
-    expenses.increments('expense_id')
+  .createTable('transactions', (transactions) => {
+    transactions.increments('transaction_id')
     
-    expenses.string('expense_name')
+    transactions.string('transaction_name')
     
-    expenses.string('expense_description', 200)
+    transactions.string('transaction_description', 200)
     
-    expenses.decimal('expense_amount')
+    transactions.decimal('transaction_amount')
     
-    expenses.integer('expense_date_year')
+    transactions.integer('transaction_date_year')
     
-    expenses.integer('expense_date_month')
+    transactions.integer('transaction_date_month')
     
-    expenses.integer('expense_date_day')
+    transactions.integer('transaction_date_day')
 
-    expenses.integer('user_id')
+    transactions.integer('user_id')
     .unsigned()
     .notNullable()
     .references('user_id')
@@ -88,33 +88,33 @@ exports.up = async (knex) => {
     .onUpdate('CASCADE')
     .onDelete('RESTRICT')
     
-    expenses.integer('expense_type_id')
+    transactions.integer('transaction_type_id')
     .unsigned()
     .notNullable()
-    .references('expense_type_id')
-    .inTable('expense_types')
+    .references('transaction_type_id')
+    .inTable('transaction_types')
     .onUpdate('CASCADE')
     .onDelete('RESTRICT')
 
-    expenses.timestamp('expense_created_at')
+    transactions.timestamp('transaction_created_at')
     .defaultTo(knex.fn.now())
     
-    expenses.timestamp('expense_modified_at')
+    transactions.timestamp('transaction_modified_at')
     .defaultTo(knex.fn.now())
   })
-  .createTable('expense_tags', expense_tags => {
+  .createTable('transaction_tags', transaction_tags => {
 
-    expense_tags.increments('expense_tag_id')
+    transaction_tags.increments('transaction_tag_id')
     
-    expense_tags.integer('expense_id')
+    transaction_tags.integer('transaction_id')
     .unsigned()
     .notNullable()
-    .references('expense_id')
-    .inTable('expenses')
+    .references('transaction_id')
+    .inTable('transactions')
     .onUpdate('CASCADE')
     .onDelete('RESTRICT')
 
-    expense_tags.integer('tag_id')
+    transaction_tags.integer('tag_id')
     .unsigned()
     .notNullable()
     .references('tag_id')
@@ -122,20 +122,20 @@ exports.up = async (knex) => {
     .onUpdate('CASCADE')
     .onDelete('RESTRICT')
     
-    expense_tags.integer('expense_tag_position')
+    transaction_tags.integer('transaction_tag_index')
     
-    expense_tags.timestamp('expense_tag_created_at')
+    transaction_tags.timestamp('transaction_tag_created_at')
     .defaultTo(knex.fn.now())
     
-    expense_tags.timestamp('expense_tag_modified_at')
+    transaction_tags.timestamp('transaction_tag_modified_at')
     .defaultTo(knex.fn.now())
   })
 }
 
 exports.down = async (knex) => {
-  await knex.schema.dropTableIfExists('expense_tags')
-  await knex.schema.dropTableIfExists('expenses')
-  await knex.schema.dropTableIfExists('expense_types')
+  await knex.schema.dropTableIfExists('transaction_tags')
+  await knex.schema.dropTableIfExists('transactions')
+  await knex.schema.dropTableIfExists('transaction_types')
   await knex.schema.dropTableIfExists('tags')
   await knex.schema.dropTableIfExists('users')
   await knex.schema.dropTableIfExists('roles')
