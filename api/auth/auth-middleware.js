@@ -7,7 +7,6 @@ const { generateJsonWebTokenForUser } = require('../../utils');
 
 const validateLoginRequiredFields = async (req, res, next) => {
   const { email, password } = req.body;  
-  console.log(email, password)
   if(!email || !password){
     next({
       status: 400,
