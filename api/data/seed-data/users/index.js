@@ -10,21 +10,25 @@ const hash = bcrypt.hashSync(userPassword, rounds);
 const users = [
   {
     email: 'lee@gmail.com',
+    email_confirmed: 1,
     password: hash,
     role_id: 1
   },
   {
     email: 'carter@gmail.com',
+    email_confirmed: 1,
     password: hash,
     role_id: 1
   },
   {
     email: 'thomas@gmail.com',
+    email_confirmed: 1,
     password: hash,
     role_id: 2
   },
   {
     email: 'roger@gmail.com',
+    email_confirmed: 1,
     password: hash,
     role_id: 2
   }
