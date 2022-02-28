@@ -123,6 +123,7 @@ exports.up = async (knex) => {
     .onDelete('RESTRICT')
     
     transaction_tags.integer('transaction_tag_index')
+    .notNullable()
     
     transaction_tags.timestamp('transaction_tag_created_at')
     .defaultTo(knex.fn.now())
