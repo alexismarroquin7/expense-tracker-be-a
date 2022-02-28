@@ -1,4 +1,7 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken')
+const { JWT_SECRET } = require('../../config');
+
 const User = require('../users/users-model');
 const { generateJsonWebTokenForUser } = require('../../utils');
 
@@ -60,9 +63,36 @@ const handleJsonWebToken = (req, res, next) => {
   }
 }
 
+const restricted = (req, res, next) => {
+  const token = req.headers.authorization;
+  if(!token){
+   res.status(401).json({ message: 'Token required' });
+  } else {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if(err){
+        res.status(401).json({ message: "Token invalid"});
+      } else {
+        req.decodedToken = decoded;
+        next();
+      }
+    });
+  }
+}
+
+const only = role_name => (req, res, next) => {
+  if(req.decodedToken.role_name === role_name){
+   next();
+  } else {
+    res.status(403).json({ message: "This is not for you" });
+  }
+}
+
+
 module.exports = {
   validateLoginRequiredFields,
   validateUserExistsByEmail,
   validatePassword,
-  handleJsonWebToken
+  handleJsonWebToken,
+  restricted,
+  only
 }
