@@ -1,10 +1,14 @@
 const router = require('express').Router();
+const User = require('./users-model');
 
-const rolesRouter = require('./roles/roles-router');
-const usersRouter = require('./users/users-router');
-
-router.use('/roles', rolesRouter);
-router.use('/users', usersRouter);
+router.get('/', async(req, res, next) => {
+  try {
+    const users = await User.findAll();
+    res.status(200).json(users);
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.use((err, req, res, next) => { // eslint-disable-line
   res.status(err.status||500).json({
