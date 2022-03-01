@@ -80,11 +80,11 @@ const transaction_tags = [
     tag_id: 11
   },
   
-  {
-    transaction_tag_index: 0,
-    transaction_id: 7,
-    tag_id: 12
-  }
+  // {
+  //   transaction_tag_index: 0,
+  //   transaction_id: 7,
+  //   tag_id: 12
+  // }
 ]
 
 module.exports = transaction_tags

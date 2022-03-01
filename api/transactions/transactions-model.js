@@ -58,7 +58,9 @@ const formatRows = (
 
     return {
       ...transaction,
-      tags: tags.sort((a, b) => a.index - b.index) // sort asc by index
+      tags: tags
+      .filter(tag => tag.tag_id !== null) // removes tags where transaction has no tags
+      .sort((a, b) => a.index - b.index) // sort asc by index
     };
 
   });
@@ -113,9 +115,48 @@ const findAll = async () => {
   .join('users as u', 'u.user_id', 'tran.user_id')
   .join('roles as r', 'r.role_id', 'u.role_id')
   .join('transaction_types as t_type', 't_type.transaction_type_id', 'tran.transaction_type_id')
-  .join('transaction_tags as t_tag', 't_tag.transaction_id', 'tran.transaction_id')
-  .join('tags as tag', 'tag.tag_id', 't_tag.tag_id')
-  
+  .leftJoin('transaction_tags as t_tag', 't_tag.transaction_id', 'tran.transaction_id')
+  .leftJoin('tags as tag', 'tag.tag_id', 't_tag.tag_id')
+  .select(
+    'tran.transaction_id',
+    'tran.transaction_name',
+    'tran.transaction_description',
+    'tran.transaction_amount',
+    'tran.transaction_date_year',
+    'tran.transaction_date_month',
+    'tran.transaction_date_day',
+    'tran.transaction_created_at',
+    'tran.transaction_modified_at',
+
+    'u.user_id',
+    'u.email',
+    'u.email_confirmed',
+    'u.password',
+    'u.user_created_at',
+    'u.user_modified_at',
+    
+    'r.role_id',
+    'r.role_name',
+    'r.role_description',
+    'r.role_created_at',
+    'r.role_modified_at',
+
+    't_type.transaction_type_id',
+    't_type.transaction_type_name',
+    't_type.transaction_type_created_at',
+    't_type.transaction_type_modified_at',
+    
+    't_tag.transaction_tag_id',
+    't_tag.transaction_tag_index',
+    't_tag.transaction_tag_created_at',
+    't_tag.transaction_tag_modified_at',
+    
+    'tag.tag_id',
+    'tag.tag_text',
+    'tag.tag_created_at',
+    'tag.tag_modified_at'
+    
+  )
   const transactions = formatRows(rows);
 
   return transactions;
@@ -126,9 +167,49 @@ const findByUserId = async (user_id, query) => {
   .join('users as u', 'u.user_id', 'tran.user_id')
   .join('roles as r', 'r.role_id', 'u.role_id')
   .join('transaction_types as t_type', 't_type.transaction_type_id', 'tran.transaction_type_id')
-  .join('transaction_tags as t_tag', 't_tag.transaction_id', 'tran.transaction_id')
-  .join('tags as tag', 'tag.tag_id', 't_tag.tag_id')
-  .where({'u.user_id': user_id});
+  .leftJoin('transaction_tags as t_tag', 't_tag.transaction_id', 'tran.transaction_id')
+  .leftJoin('tags as tag', 'tag.tag_id', 't_tag.tag_id')
+  .where({'u.user_id': user_id})
+  .select(
+    'tran.transaction_id',
+    'tran.transaction_name',
+    'tran.transaction_description',
+    'tran.transaction_amount',
+    'tran.transaction_date_year',
+    'tran.transaction_date_month',
+    'tran.transaction_date_day',
+    'tran.transaction_created_at',
+    'tran.transaction_modified_at',
+
+    'u.user_id',
+    'u.email',
+    'u.email_confirmed',
+    'u.password',
+    'u.user_created_at',
+    'u.user_modified_at',
+    
+    'r.role_id',
+    'r.role_name',
+    'r.role_description',
+    'r.role_created_at',
+    'r.role_modified_at',
+
+    't_type.transaction_type_id',
+    't_type.transaction_type_name',
+    't_type.transaction_type_created_at',
+    't_type.transaction_type_modified_at',
+    
+    't_tag.transaction_tag_id',
+    't_tag.transaction_tag_index',
+    't_tag.transaction_tag_created_at',
+    't_tag.transaction_tag_modified_at',
+    
+    'tag.tag_id',
+    'tag.tag_text',
+    'tag.tag_created_at',
+    'tag.tag_modified_at'
+    
+  );
 
   const transactions = formatRows(rows, query);
 
