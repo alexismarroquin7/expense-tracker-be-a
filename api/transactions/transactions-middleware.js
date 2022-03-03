@@ -73,8 +73,8 @@ const validateNewTransactionRequiredFields = (req, res, next) => {
     typeof date.day === 'number',
     
     type: typeof type === 'string' &&
-    type === ('deposit' || 'widthdrawl'),
-
+    (type === 'deposit') || (type === 'withdrawl'),
+    
     tags: Array.isArray(tags) && validTags(tags)
   }
 
@@ -111,6 +111,7 @@ const validateTransactionExistsById = async (req, res, next) => {
     next(err);
   }
 }
+
 
 module.exports = {
   handleQuery,

@@ -3,7 +3,7 @@ const transaction_types = [
     transaction_type_name: 'deposit'
   },
   {
-    transaction_type_name: 'widthdrawl'
+    transaction_type_name: 'withdrawl'
   }
 ]
 

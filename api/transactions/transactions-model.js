@@ -218,8 +218,106 @@ const findByUserId = async (user_id, query) => {
 }
 
 const create = async (newTransaction) => {
-  console.log('transactions-model.js')
-  return newTransaction;
+  /*
+    model:
+
+    {
+      name: 'hello',
+      description: 'world',
+      amount: 12.32,
+      type: 'deposit',
+      date: {
+        year: 2022,
+        month: 3,
+        day: 2
+      },
+      tags: [
+        {
+          index: 0,
+          text: 'personal'
+        },
+        {
+          index: 1,
+          text: 'clothes'
+        }
+      ]
+    }
+
+    steps:
+
+    [x] find user_id to use
+    [x] find transaction_type_id to use
+    [ ] for each tag
+      [ ] check if tag text exists
+        [ ] if does not exist
+          [ ] create new tag
+
+        [ ] if does exist
+          [ ] get tag id
+      
+      [ ] insert tag_id, tag index, and transaction id to transaction_tags table
+  
+  */
+
+  
+  // find transaction_type_id to use
+  const transaction_type = await db('transaction_types as t_type')
+  .where({
+    't_type.transaction_type_name': newTransaction.type
+  })
+  .first();
+
+  const transaction_type_id_to_use = transaction_type.transaction_type_id;
+
+  // create new transaction
+  const [transaction] =  await db('transactions as tran')
+  .insert({
+    transaction_name: newTransaction.name,
+    transaction_description: newTransaction.description || null,
+    transaction_amount: newTransaction.amount,
+    transaction_date_year: newTransaction.date.year,
+    transaction_date_month: newTransaction.date.month,
+    transaction_date_day: newTransaction.date.day,
+    transaction_type_id: transaction_type_id_to_use,
+    user_id: newTransaction.user_id
+  }, ['tran.transaction_id']);
+
+  // insert tags
+  await newTransaction.tags.forEach(async tag => {
+    
+    let tag_id_to_use;
+    
+    // check if tag already exists
+    const tagFound = await db('tags as t')
+    .where({ 't.tag_text': tag.text })
+    .first();
+
+    // if tag exists use existing tag_id
+    if(tagFound){
+      tag_id_to_use = tagFound.tag_id
+    
+    } else {
+      // if tag DOES NOT exist create new tag
+      const [newTag] = await db('tags as t')
+      .insert({
+        tag_text: tag.text 
+      }, ['t.tag_id']);
+
+      tag_id_to_use = newTag.tag_id
+    }
+
+    await db('transaction_tags as t_tags')
+    .insert({
+      transaction_tag_index: tag.index,
+      tag_id: tag_id_to_use,
+      transaction_id: transaction.transaction_id
+    })
+    
+  });
+  
+  
+
+  return findById(transaction.transaction_id);
 }
 
 const findById = async (transaction_id) => {
@@ -228,7 +326,7 @@ const findById = async (transaction_id) => {
   .first()
 
   if(!transactionFound) return null;
-  
+
   const rows = await db('transactions as tran')
   .join('users as u', 'u.user_id', 'tran.user_id')
   .join('roles as r', 'r.role_id', 'u.role_id')

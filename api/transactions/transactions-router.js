@@ -1,6 +1,10 @@
 const router = require('express').Router();
 const Transaction = require('./transactions-model');
-const { handleQuery, validateNewTransactionRequiredFields, validateTransactionExistsById } = require('./transactions-middleware');
+const { 
+  handleQuery,
+  validateNewTransactionRequiredFields,
+  validateTransactionExistsById
+} = require('./transactions-middleware');
 const { restricted } = require('../auth/auth-middleware');
 
 router.get('/', restricted, handleQuery, async (req, res, next) => {
@@ -14,18 +18,21 @@ router.get('/', restricted, handleQuery, async (req, res, next) => {
 
 router.get(
   '/:transaction_id',
-  validateTransactionExistsById, 
+  validateTransactionExistsById,
   (req, res) => {
-  console.log('over here')
   res.status(200).json(req.transaction);
 });
 
 router.post(
   '/', 
+  restricted,
   validateNewTransactionRequiredFields,
   async (req, res, next) => {
   try {
-    const newTransaction = await Transaction.create(req.body);
+    const newTransaction = await Transaction.create({
+      ...req.body,
+      user_id: req.decodedToken.subject
+    });
     res.status(200).json(newTransaction);
   } catch (err) {
     next(err);
