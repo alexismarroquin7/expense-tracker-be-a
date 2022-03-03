@@ -157,6 +157,7 @@ const findAll = async () => {
     'tag.tag_modified_at'
     
   )
+  
   const transactions = formatRows(rows);
 
   return transactions;
@@ -216,7 +217,75 @@ const findByUserId = async (user_id, query) => {
   return transactions;
 }
 
+const create = async (newTransaction) => {
+  console.log('transactions-model.js')
+  return newTransaction;
+}
+
+const findById = async (transaction_id) => {
+  const transactionFound = await db('transactions as tran')
+  .where({ 'tran.transaction_id': transaction_id })
+  .first()
+
+  if(!transactionFound) return null;
+  
+  const rows = await db('transactions as tran')
+  .join('users as u', 'u.user_id', 'tran.user_id')
+  .join('roles as r', 'r.role_id', 'u.role_id')
+  .join('transaction_types as t_type', 't_type.transaction_type_id', 'tran.transaction_type_id')
+  .leftJoin('transaction_tags as t_tag', 't_tag.transaction_id', 'tran.transaction_id')
+  .leftJoin('tags as tag', 'tag.tag_id', 't_tag.tag_id')
+  .where({ 'tran.transaction_id': transaction_id })
+  .select(
+    'tran.transaction_id',
+    'tran.transaction_name',
+    'tran.transaction_description',
+    'tran.transaction_amount',
+    'tran.transaction_date_year',
+    'tran.transaction_date_month',
+    'tran.transaction_date_day',
+    'tran.transaction_created_at',
+    'tran.transaction_modified_at',
+
+    'u.user_id',
+    'u.email',
+    'u.email_confirmed',
+    'u.password',
+    'u.user_created_at',
+    'u.user_modified_at',
+    
+    'r.role_id',
+    'r.role_name',
+    'r.role_description',
+    'r.role_created_at',
+    'r.role_modified_at',
+
+    't_type.transaction_type_id',
+    't_type.transaction_type_name',
+    't_type.transaction_type_created_at',
+    't_type.transaction_type_modified_at',
+    
+    't_tag.transaction_tag_id',
+    't_tag.transaction_tag_index',
+    't_tag.transaction_tag_created_at',
+    't_tag.transaction_tag_modified_at',
+    
+    'tag.tag_id',
+    'tag.tag_text',
+    'tag.tag_created_at',
+    'tag.tag_modified_at'
+    
+  )
+
+  const [transactionItem] = formatRows(rows);
+
+  return transactionItem;
+
+}
+
 module.exports = {
   findAll,
-  findByUserId
+  findByUserId,
+  create,
+  findById
 }

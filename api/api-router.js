@@ -5,7 +5,6 @@ const usersRouter = require('./users/users-router');
 const authRouter = require('./auth/auth-router');
 const transactionsRouter = require('./transactions/transactions-router');
 
-
 router.use('/roles', rolesRouter);
 router.use('/users', usersRouter);
 router.use('/auth', authRouter);

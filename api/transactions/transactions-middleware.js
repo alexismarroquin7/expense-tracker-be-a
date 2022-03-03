@@ -39,6 +39,81 @@ const handleQuery = async (req, res, next) => {
   }
 };
 
+const validateNewTransactionRequiredFields = (req, res, next) => {
+  const { name, amount, date, type, tags } = req.body;
+  
+  const validTags = (tagList) => {
+    let validTagList = true;
+
+    tagList.forEach(tagItem => {
+      if(
+        !(typeof tagItem.index === 'number') ||
+        !(typeof tagItem.text === 'string')
+      ){
+        validTagList = false;
+      }
+
+    });
+
+    return validTagList;
+  }
+
+  const valid = {
+    name: typeof name === 'string' && name.length > 0,
+    
+    amount: typeof amount === 'number',
+    
+    date: typeof date === 'object' &&
+    !isEmptyObj(date) &&
+    date.year &&
+    typeof date.year === 'number' &&
+    date.month &&
+    typeof date.month === 'number' &&
+    date.day &&
+    typeof date.day === 'number',
+    
+    type: typeof type === 'string' &&
+    type === ('deposit' || 'widthdrawl'),
+
+    tags: Array.isArray(tags) && validTags(tags)
+  }
+
+  if(
+    valid.name &&
+    valid.amount &&
+    valid.date &&
+    valid.type &&
+    valid.tags
+  ){
+    next();
+  } else {
+    next({
+      status: 400,
+      message: 'new transaction missing required fields'
+    });
+  }
+}
+
+const validateTransactionExistsById = async (req, res, next) => {
+  const { transaction_id } = req.params;
+  try {
+    const transaction = await Transaction.findById(transaction_id);
+    if(transaction){
+      req.transaction = transaction;
+      next();
+    } else {
+      next({
+        status: 404,
+        message: `transaction does not exist`
+      })
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
-  handleQuery
+  handleQuery,
+  validateNewTransactionRequiredFields,
+  validateTransactionExistsById
 }
