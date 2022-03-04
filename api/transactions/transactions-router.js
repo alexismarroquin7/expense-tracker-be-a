@@ -33,11 +33,23 @@ router.post(
       ...req.body,
       user_id: req.decodedToken.subject
     });
-    res.status(200).json(newTransaction);
+    res.status(201).json(newTransaction);
   } catch (err) {
     next(err);
   }
 })
+
+router.delete(
+  '/:transaction_id',
+  validateTransactionExistsById, 
+  async (req, res, next) => {
+    try {
+      const deletedTransaction = await Transaction.deleteById(req.transaction.transaction_id);
+      res.status(200).json({ transaction_id: deletedTransaction.transaction_id });
+    } catch(err) {
+      next(err);
+    }
+  })
 
 router.use((err, req, res, next) => { // eslint-disable-line
   res.status(err.status||500).json({

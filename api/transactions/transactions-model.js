@@ -381,9 +381,44 @@ const findById = async (transaction_id) => {
 
 }
 
+const deleteById = async (transaction_id) => {
+  
+  // find transaction that will be deleted
+  const transactionToDelete = await findById(transaction_id);
+
+  // delete transaction_tags where transaction_id === transactionToDelete.transaction_id
+  await db('transaction_tags as t_tag')
+  .where({ 't_tag.transaction_id': transactionToDelete.transaction_id })
+  .delete();
+
+  // check if any other transaction uses tags 
+  // that were used by the transactionToDelete
+  await transactionToDelete.tags.forEach(async tag => {
+    const transactionTagFound = await db('transaction_tags as t_tag')
+    .where({ 't_tag.tag_id': tag.tag_id })
+    .first();
+
+    // if no other transaction is using this tag
+    // delete the tag by id
+    if(!transactionTagFound){
+      await db('tags as t')
+      .where({ 't.tag_id': tag.tag_id })
+      .delete()
+    }
+
+  });
+
+  await db('transactions as tran')
+  .where({ 'tran.transaction_id': transactionToDelete.transaction_id })
+  .delete()
+
+  return transactionToDelete;
+}
+
 module.exports = {
   findAll,
   findByUserId,
   create,
-  findById
+  findById,
+  deleteById
 }
