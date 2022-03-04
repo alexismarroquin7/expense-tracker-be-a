@@ -31,10 +31,7 @@ const tags = [
   },  
   { // 11
     tag_text: 'paycheck'
-  },
-  { // 12
-    tag_text: 'miscellaneous'
-  },
+  }
 ]
 
 module.exports = tags;
