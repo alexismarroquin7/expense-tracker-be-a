@@ -218,47 +218,6 @@ const findByUserId = async (user_id, query) => {
 }
 
 const create = async (newTransaction) => {
-  /*
-    model:
-
-    {
-      name: 'hello',
-      description: 'world',
-      amount: 12.32,
-      type: 'deposit',
-      date: {
-        year: 2022,
-        month: 3,
-        day: 2
-      },
-      tags: [
-        {
-          index: 0,
-          text: 'personal'
-        },
-        {
-          index: 1,
-          text: 'clothes'
-        }
-      ]
-    }
-
-    steps:
-
-    [x] find user_id to use
-    [x] find transaction_type_id to use
-    [ ] for each tag
-      [ ] check if tag text exists
-        [ ] if does not exist
-          [ ] create new tag
-
-        [ ] if does exist
-          [ ] get tag id
-      
-      [ ] insert tag_id, tag index, and transaction id to transaction_tags table
-  
-  */
-
   
   // find transaction_type_id to use
   const transaction_type = await db('transaction_types as t_type')
@@ -415,10 +374,168 @@ const deleteById = async (transaction_id) => {
   return transactionToDelete;
 }
 
+const updateById = async (transaction_id, changes) => {
+
+  // find transaction that will get updated
+  const oldTransaction = await findById(transaction_id);
+
+  // check if all tags were removed
+  if(changes.tags.length === 0) {
+    await db('transaction_tags as t_tag')
+    .where({ 't_tag.transaction_id': transaction_id })
+    .delete()
+  }
+
+  // handles any deleted tags
+  await oldTransaction.tags.forEach(async oldTag => {
+    
+    // check if the old tag is being used in the new tag list
+    const matchingTags = changes.tags.filter(newTag => newTag.text === oldTag.text);
+
+    const oldTagStillBeingUsed = matchingTags.length === 1;
+    
+    if(oldTagStillBeingUsed){
+      // if the old tag is being used
+      // check if the index is the same
+      
+      const usingSameIndex = matchingTags[0].index === oldTag.index;
+      
+      if(!usingSameIndex){
+        // if the index has changed make the update
+        await db('transaction_tags as t_tag')
+        .where({
+          't_tag.transaction_id': transaction_id,
+          't_tag.tag_id': oldTag.tag_id
+        })
+        .update({
+          transaction_id,
+          tag_id: oldTag.tag_id,
+          transaction_tag_index: matchingTags[0].index,
+          transaction_tag_modified_at: db.fn.now()
+        }, ['*'])
+      }
+    
+
+    } else {
+      // if the old tag is NOT being used
+
+      // remove the tag from the transaction
+      await db('transaction_tags as t_tag')
+      .where({
+        't_tag.transaction_id': transaction_id,
+        't_tag.tag_id': oldTag.tag_id
+      })
+      .delete();
+
+      // check if any other transactions are using the tag
+      const matchingTags = await db('transaction_tags as t_tag')
+      .where({
+        't_tag.tag_id': oldTag.tag_id
+      })
+      
+      const tagIsBeingUsedByOtherTransactions = matchingTags.length > 0;
+      
+      // if the tag is not being used by any other transaction
+      // delete the tag
+
+      if(!tagIsBeingUsedByOtherTransactions){
+        await db('tags as t')
+        .where({
+          't.tag_id': oldTag.tag_id
+        })
+        .delete();
+      }
+    }
+    
+  });
+
+  changes.tags.forEach(async tagToInsert => {
+    // prevents the transaction from being tagged twice with the same tag
+    const alreadyTagged = await db('transaction_tags as t_tag')
+    .join('tags as t', 't.tag_id', 't_tag.tag_id')
+    .where({
+      't.tag_text': tagToInsert.text,
+      't_tag.transaction_id': transaction_id
+    })
+    .first();
+  
+    if (alreadyTagged) return;
+
+    // check if the tag exists
+    const tagExists = await db('tags as t')
+    .where({
+      't.tag_text': tagToInsert.text
+    })
+    .first();
+
+    let tag_id_to_use;
+
+    if(tagExists){
+      tag_id_to_use = tagExists.tag_id
+    } else {
+      // if tag DOES NOT exist
+      // create a new tag
+      tag_id_to_use = await db('tags as t')
+      .insert({
+        tag_text: tagToInsert.text
+      }, ['t.tag_id']);
+    }
+
+
+    await db('transaction_tags as t_tag')
+    .insert({
+      transaction_id,
+      tag_id: tag_id_to_use,
+      transaction_tag_index: tagToInsert.index
+    });
+
+  })
+  
+
+  let transaction_type_id_to_use;
+  // check if transaction_type updated
+  
+  if(changes.type === oldTransaction.transaction_type.name){
+    // if it has NOT changed used the old transaction_type_id
+    transaction_type_id_to_use = oldTransaction.transaction_type.transaction_type_id;
+  } else {
+    // if it HAS changed
+    // find the correct transaction_type_id to use
+    const transactionTypeToUse = await db('transaction_types as t_type')
+    .where({
+      't_type.transaction_type_name': changes.type
+    })
+    .first()
+    .select('t_type.transaction_type_id')
+    transaction_type_id_to_use = transactionTypeToUse.transaction_type_id
+  }
+  
+  let [updatedTransaction] = await db('transactions as tran')
+  .where({
+    'tran.transaction_id': transaction_id
+  })
+  .update({
+    transaction_name: changes.name, 
+    transaction_description: changes.description || null,
+    transaction_amount: changes.amount,
+    transaction_date_year: changes.date.year,
+    transaction_date_month: changes.date.month,
+    transaction_date_day: changes.date.day,
+    transaction_modified_at: db.fn.now(),
+    transaction_type_id: transaction_type_id_to_use,
+    user_id: changes.user_id
+  }, ['tran.transaction_id'])
+
+  updatedTransaction = await findById(updatedTransaction.transaction_id)
+
+  return updatedTransaction;
+}
+
 module.exports = {
   findAll,
   findByUserId,
   create,
   findById,
-  deleteById
+  deleteById,
+  updateById
 }

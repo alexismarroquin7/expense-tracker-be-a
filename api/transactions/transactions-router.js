@@ -18,9 +18,32 @@ router.get('/', restricted, handleQuery, async (req, res, next) => {
 
 router.get(
   '/:transaction_id',
+  restricted,
   validateTransactionExistsById,
   (req, res) => {
   res.status(200).json(req.transaction);
+});
+
+router.put(
+  '/:transaction_id',
+  restricted,
+  validateTransactionExistsById,
+  validateNewTransactionRequiredFields,
+  async (req, res, next) => {
+    const { transaction_id } = req.params;
+
+    try {
+      const transaction = await Transaction.updateById(
+        transaction_id,
+        {
+          ...req.body,
+          user_id: req.decodedToken.subject
+        }
+      );
+      res.status(200).json(transaction);
+    } catch (err) {
+      next(err);
+    }
 });
 
 router.post(
