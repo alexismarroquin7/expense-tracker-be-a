@@ -56,7 +56,22 @@ const findBy = async (filter) => {
   return users;
 }
 
+const create = async (user) => {
+  const [newUser] = await db('users as u')
+  .insert({
+    email: user.email,
+    email_confirmed: user.email_confirmed,
+    password: user.password,
+    role_id: user.role_id
+  }, ['u.user_id'])
+
+  const [newUserToUse] = await findBy({ 'u.user_id': newUser.user_id });
+  
+  return newUserToUse;
+}
+
 module.exports = {
   findAll,
-  findBy
+  findBy,
+  create
 }
